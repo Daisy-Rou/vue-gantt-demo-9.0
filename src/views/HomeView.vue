@@ -1,18 +1,137 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div class="mian-box" ref="container">
+    <div class="gantt-box" ref="ganttContainer"></div>
+    <!-- <iframe 
+      class="background-iframe"
+      :src="backgroundUrl"
+      frameborder="0"
+      allowfullscreen
+    ></iframe> -->
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue'
+// import gantt from "dhtmlx-gantt";
+// import "dhtmlx-gantt/codebase/dhtmlxgantt.css"
+
+import {gantt} from '../../codebase1/dhtmlxgantt'
+import "../../codebase1/dhtmlxgantt.css"
+
+// import { Gantt} from "@dhx/trial-gantt";
+// import "@dhx/trial-gantt/codebase/dhtmlxgantt.css";
 
 export default {
   name: 'HomeView',
-  components: {
-    HelloWorld
+  data() {
+    return {
+      backgroundUrl: 'http://47.111.147.202:10090/video.html',
+      tasks: {
+        data: [
+          { id: 11, text: "Project #1", type: "project", progress: 0.6, open: true },
+
+          { id: 12, text: "Task #1", start_date: "03-04-2023", duration: 5, parent: 11, progress: 1, open: true },
+          { id: 13, text: "Task #2", start_date: "03-04-2023", type: "project", parent: 11, progress: 0.5, open: true },
+          { id: 14, text: "Task #3", start_date: "02-04-2023", duration: 6, parent: 11, progress: 0.8, open: true },
+          { id: 15, text: "Task #4", type: "project", parent: 11, progress: 0.2, open: true },
+          { id: 16, text: "Final milestone", start_date: "15-04-2023", type: "milestone", parent: 11, progress: 0, open: true },
+
+          { id: 17, text: "Task #2.1", start_date: "03-04-2023", duration: 2, parent: 13, progress: 1, open: true },
+          { id: 18, text: "Task #2.2", start_date: "06-04-2023", duration: 3, parent: 13, progress: 0.8, open: true },
+          { id: 19, text: "Task #2.3", start_date: "10-04-2023", duration: 4, parent: 13, progress: 0.2, open: true },
+          { id: 20, text: "Task #2.4", start_date: "10-04-2023", duration: 4, parent: 13, progress: 0, open: true },
+          { id: 21, text: "Task #4.1", start_date: "03-04-2023", duration: 4, parent: 15, progress: 0.5, open: true },
+          { id: 22, text: "Task #4.2", start_date: "03-04-2023", duration: 4, parent: 15, progress: 0.1, open: true },
+          { id: 23, text: "Mediate milestone", start_date: "14-04-2023", type: "milestone", parent: 15, progress: 0, open: true }
+        ],
+        links: [
+          { id: 10, source: 11, target: 12, type: 1 },
+          { id: 11, source: 11, target: 13, type: 1 },
+          { id: 12, source: 11, target: 14, type: 1 },
+          { id: 13, source: 11, target: 15, type: 1 },
+          { id: 14, source: 23, target: 16, type: 0 },
+          { id: 15, source: 13, target: 17, type: 1 },
+          { id: 16, source: 17, target: 18, type: 0 },
+          { id: 17, source: 18, target: 19, type: 0 },
+          { id: 18, source: 19, target: 20, type: 0 },
+          { id: 19, source: 15, target: 21, type: 2 },
+          { id: 20, source: 15, target: 22, type: 2 },
+          { id: 21, source: 15, target: 23, type: 0 }
+        ]
+      },
+      selectedTask: null,
+      messages: [],
+    };
+  },
+  beforeUnmount() {
+    // 清理 Gantt 资源
+    if (gantt && gantt.destroy) {
+      gantt.destroy();
+    }
+    // this.gantt.destructor();
+  },
+  methods: {
+    initGantt() {
+      // let gantt = Gantt.getGanttInstance();
+      gantt.plugins({
+        tooltip: true,
+        drag_timeline: true
+      });
+      gantt.i18n.setLocale('cn')
+      gantt.init(this.$refs.ganttContainer);
+      gantt.parse(this.tasks);
+    }
   }
 }
 </script>
+<style>
+/* @import "@dhx/trial-gantt/codebase/dhtmlxgantt.css"; */
+.main-box {
+  display: flex;
+}
+.gantt-box {
+  width: 50%;
+  height: 50%;
+}
+.gantt_layout_cell {
+  /* background-image: url('../assets/images/1.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed; */
+  background: transparent;
+}
+.gantt_grid_scale,
+.gantt_grid_data {
+  user-select: none !important;
+}
+.gantt_grid_head_cell {
+  cursor: default !important;
+}
+.gantt_task_scale, .gantt_grid, .gantt_grid_head_cell, .gantt_task_row, .gantt_grid_scale {
+  background-color: rgba(0, 0 ,0, .35) !important;
+  color: #fff !important;
+}
+.gantt_tree_content, .gantt_scale_cell {
+  color: #fff !important;
+}
+/* 修改选择行背景色 */
+.gantt_grid_data .gantt_row.gantt_selected, .gantt_grid_data .gantt_row.odd.gantt_selected,
+.gantt_task_row.odd.gantt_selected, .gantt_task_row.gantt_selected {
+  background-color: #4a4b53 !important;
+}
+/* 修改数据行背景色 */
+.gantt_grid_data .gantt_row, .gantt_data_area, .gantt_task_row {
+  background-color: rgba(0, 0 ,0, .35) !important;
+}
+.gantt_add:before, .gantt_grid_head_add:before {
+  color: #fff !important;
+}
+/* 任务条整体（未完成部分） */
+/* .gantt_task_line {
+  background-color: red;
+} */
+/* 任务进度条（已完成部分） */
+.gantt_task_progress {
+  background-color: rgba(0, 0 ,0, .35) !important;
+}
+</style>

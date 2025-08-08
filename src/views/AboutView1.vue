@@ -1,15 +1,15 @@
 <template>
   <div class="mian-box" ref="container">
-    <div class="btn-box">
-      <el-button v-if="showBtn" class="btn-toggle" type="primary" @click="handleToggle()">放大</el-button>
-      <el-button v-if="showBtnFull" class="btn-toggle" type="primary" @click="handleToggle('full')">缩小</el-button>
-      <el-radio-group v-model="radio" @input="handleChange">
-        <el-radio label="day">Day scale</el-radio>
-        <el-radio label="month">Month scale</el-radio>
-        <el-radio label="year">Year scale</el-radio>
-      </el-radio-group>
+    <div class="gantt-box" ref="ganttContainer"></div>
+    <div class="controls">
+      <div class="zoom-control">
+        <div class="zoom-title">缩放控制器</div>
+        <div class="slider-container">
+          <input type="range" id="scaleSlider" min="40" max="100" value="100" orient="vertical">
+        </div>
+        <div class="zoom-value">100%</div>
+      </div>
     </div>
-    <div class="gantt-box" :style="{width: ganttSize.width + '%', height: ganttSize.height + '%'}" ref="ganttContainer"></div>
     <iframe 
       class="background-iframe"
       :src="backgroundUrl"
@@ -33,13 +33,6 @@ export default {
   name: 'AboutView',
   data() {
     return {
-      radio: 'day',
-      showBtn: true,
-      showBtnFull: false,
-      ganttSize: {
-        width: 50,
-        height: 50
-      },
       backgroundUrl: 'http://47.111.147.202:10090/video.html',
       tasks: {
         data: [
@@ -96,111 +89,61 @@ export default {
         tooltip: true
       });
       gantt.i18n.setLocale('cn')
+
+
       gantt.init(this.$refs.ganttContainer);
       gantt.parse(this.tasks)
-      this.zoomConfig = {
-        levels: [
-          {
-            name:"day",
-            scale_height: 27,
-            min_column_width:80,
-            scales:[
-              {unit: "day", step: 1, format: "%M %d"}
-            ]
-          },
-          {
-            name:"month",
-            scale_height: 50,
-            min_column_width:120,
-            scales:[
-              {unit: "year", format: "%Y"},
-              {unit: "month", format: "%F"},
-              // {unit: "day", format: "%d"}
-            ]
-          },
-          {
-            name:"year",
-            scale_height: 50,
-            min_column_width: 30,
-            scales:[
-              {unit: "year", step: 1, format: "%Y"},
-              // {unit: "month", format: "%F"}
-            ]
-          }
-        ]
-      };
-      gantt.ext.zoom.init(this.zoomConfig);
-      gantt.ext.zoom.setLevel(this.radio);
 
       // var firstTaskDate = gantt.getTaskByIndex(0).start_date;
       var firstTaskDate = new Date('2023, 04, 03')
       console.log('firstTaskDate', firstTaskDate)
-      gantt.addMarker({
+      var todayMarker = gantt.addMarker({
         start_date: firstTaskDate,
         css: "today",
         text: "Today"
       });
       // 缩放控制功能
-      // const slider = document.getElementById("scaleSlider");
-      // const zoomValue = document.querySelector(".zoom-value");
-      // const ganttContainer = this.$refs.ganttContainer;
+      const slider = document.getElementById("scaleSlider");
+      const zoomValue = document.querySelector(".zoom-value");
+      const ganttContainer = this.$refs.ganttContainer;
       
       // 保存原始尺寸
-      // const originalWidth = ganttContainer.offsetWidth;
-      // const originalHeight = ganttContainer.offsetHeight;
+      const originalWidth = ganttContainer.offsetWidth;
+      const originalHeight = ganttContainer.offsetHeight;
       
       // 更新缩放值显示
-      // function updateZoomValue(value) {
-      //   zoomValue.textContent = `${value}%`;
+      function updateZoomValue(value) {
+        zoomValue.textContent = `${value}%`;
         
-      //   // 添加动画效果
-      //   zoomValue.style.transform = "scale(1.2)";
-      //   setTimeout(() => {
-      //       zoomValue.style.transform = "scale(1)";
-      //   }, 200);
-      // }
+        // 添加动画效果
+        zoomValue.style.transform = "scale(1.2)";
+        setTimeout(() => {
+            zoomValue.style.transform = "scale(1)";
+        }, 200);
+      }
       
       // 应用缩放
-      // function applyZoom(scale) {
-      //   const newWidth = originalWidth * (scale / 100);
-      //   const newHeight = originalHeight * (scale / 100);
+      function applyZoom(scale) {
+        const newWidth = originalWidth * (scale / 100);
+        const newHeight = originalHeight * (scale / 100);
         
-      //   ganttContainer.style.width = `${newWidth}px`;
-      //   ganttContainer.style.height = `${newHeight}px`;
+        ganttContainer.style.width = `${newWidth}px`;
+        ganttContainer.style.height = `${newHeight}px`;
         
-      //   // 更新滑块值
-      //   slider.value = scale;
-      //   updateZoomValue(scale);
+        // 更新滑块值
+        slider.value = scale;
+        updateZoomValue(scale);
         
-      //   // 刷新Gantt图表
-      //   setTimeout(() => gantt.render(), 100);
-      // }
+        // 刷新Gantt图表
+        setTimeout(() => gantt.render(), 100);
+      }
       
       // 滑块事件监听
-      // slider.addEventListener("input", function() {
-      //   const scale = parseInt(this.value);
-      //   applyZoom(scale);
-      // });
+      slider.addEventListener("input", function() {
+        const scale = parseInt(this.value);
+        applyZoom(scale);
+      });
     },
-    handleToggle(type) {
-      if (type) {
-        this.ganttSize.width = 50
-        this.ganttSize.height = 50
-        this.showBtn = true
-        this.showBtnFull = false
-      } else {
-        this.ganttSize.width = 100
-        this.ganttSize.height = 100
-        this.showBtn = false
-        this.showBtnFull = true
-      }
-      gantt.render(true)
-    },
-    handleChange(e) {
-      gantt.ext.zoom.init(this.zoomConfig);
-      gantt.ext.zoom.setLevel(e);
-      gantt.render(true)
-    }
   }
 }
 </script>
@@ -208,32 +151,14 @@ export default {
 /* @import "@dhx/trial-gantt/codebase/dhtmlxgantt.css"; */
 .mian-box {
   display: flex;
-  flex-direction: column;
   height: 100vh;
   width: 100%;
   overflow: hidden;
 }
-.btn-box {
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  z-index: 1;
-  background-color: rgba(0, 0 ,0, .05);
-}
-.btn-toggle {
-  margin-right: 24px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-}
 .gantt-box {
-  /* width: 50%;
-  height: 50%; */
+  width: 100%;
+  height: 100%;
   z-index: 1;
-  transition: all .1s ease-in-out;
   /* margin-right: 30px; */
 }
 .controls {
@@ -349,7 +274,7 @@ export default {
 /* 修改选择行背景色 */
 .gantt_grid_data .gantt_row.gantt_selected, .gantt_grid_data .gantt_row.odd.gantt_selected,
 .gantt_task_row.odd.gantt_selected, .gantt_task_row.gantt_selected {
-  background-color: rgba(0, 0, 0, 0.35) !important;
+  background-color: #4a4b53 !important;
 }
 /* 修改数据行背景色 */
 .gantt_grid_data .gantt_row, .gantt_data_area, .gantt_task_row {
@@ -363,11 +288,11 @@ export default {
   background-color: red;
 } */
 .gantt_bar_task {
-  background-color: #E3334E !important;
+  background-color: red;
 }
 /* 任务进度条（已完成部分） */
 .gantt_task_progress {
-  background-color: rgba(0, 0 ,0, .15) !important;
+  background-color: rgba(0, 0 ,0, .05) !important;
 }
 .gantt-marker .today {
   background: #ff0000 !important; /* 红色背景 */
